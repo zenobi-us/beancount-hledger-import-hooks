@@ -1,0 +1,26 @@
+---
+name: Install Python dependencies with Poetry
+
+description: installs dependancies
+
+runs:
+  using: 'composite'
+
+  steps:
+    - name: Get poetry cache directory path
+      id: poetry-cache-dir-path
+      run: echo "dir=$$HOME/.cache/pypoetry" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Cache Poetry
+      id: poetry-cache
+      uses: actions/cache@v3
+      with:
+        path: ${{ steps.poetry-cache-dir-path.outputs.dir }}
+        key: ${{ runner.os }}-${{ hashFiles('.tool-versions') }}-poetry-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ hashFiles('.tool-versions') }}-poetry-
+
+    - name: poetry install
+      shell: bash
+      run: poetry install 

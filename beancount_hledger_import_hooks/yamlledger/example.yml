@@ -1,0 +1,13 @@
+---
+rules:
+- matchers:
+  - and_is: description.is("Some description")
+  - or_is: description.is("Some other description")
+  transforms:
+  - set_to: category("Some category")
+  - set_to: account("Some account")
+- include: './example-extra.yml'
+- matchers:
+  - and_is: description.is("Woolworths")
+  transforms:
+  - set_to: Account("Expenses:Food:Groceries")

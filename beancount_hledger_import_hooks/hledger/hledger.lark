@@ -1,0 +1,132 @@
+// https://hledger.org/1.34/hledger.html#csv
+//
+// TODO:
+//  - IF tables (import_rule)
+//  - IF empty row (import_rule)
+//
+// NEEDS TESTING:
+//  - every rule except import and include
+
+// many rules ending in a possible new line
+start: (rule | _NEWLINE | _COMMENT)*
+
+// a rule can be an "include" or an "import transform"
+rule: source_rule
+    | separator_rule
+    | skip_rule
+    | date_format_rule
+    | timezone_rule
+    | newest_first_rule
+    | intra_day_reversed_rule
+    | decimal_mark_rule
+    | field_list_rule
+    | field_assignment_rule
+    | balance_type_rule
+    | include_rule
+    | import_rule
+
+
+// https://hledger.org/1.34/hledger.html#source
+source_rule: "source" source_value _NEWLINE*
+source_value: /[^\n]+/
+
+// https://hledger.org/1.34/hledger.html#separator
+separator_rule: "separator" separator_value _NEWLINE*
+separator_value: /(.|TAB|SPACE)/i
+
+// https://hledger.org/1.34/hledger.html#skip
+skip_rule: "skip" skip_row_count _NEWLINE*
+skip_row_count: /0-9/
+
+// https://hledger.org/1.34/hledger.html#date-format
+date_format_rule: "date-format" date_format _NEWLINE*
+date_format: /[^\n]+/
+
+// https://hledger.org/1.34/hledger.html#timezone
+timezone_rule: "timezone" timezone_value _NEWLINE*
+timezone_value: /[^\n]+/
+
+// https://hledger.org/1.34/hledger.html#newest-first
+newest_first_rule: "newest-first" _NEWLINE*
+
+// https://hledger.org/1.34/hledger.html#intra-day-reversed
+intra_day_reversed_rule: "intra-day-reversed" _NEWLINE*
+
+// https://hledger.org/1.34/hledger.html#decimal-mark
+decimal_mark_rule: "decimal-mark" decimal_mark_value _NEWLINE*
+decimal_mark_value: "," | "."
+
+// https://hledger.org/1.34/hledger.html#fields-list
+field_list_rule: "fields " (field_header|_HEADER_SEPARATOR)* _NEWLINE*
+field_header: _key
+_HEADER_SEPARATOR: /,\s*/
+
+// https://hledger.org/1.34/hledger.html#field-assignment
+field_assignment_rule: field_assignment_key assignment_value _NEWLINE*
+field_assignment_key: _key
+assignment_value: /[^\n]+/
+
+//
+balance_type_rule: "balance-type" balance_type _NEWLINE*
+balance_type: "="
+            | "=*"
+            | "=="
+            | "==*"
+
+// Include
+include_rule: "include" include_path _NEWLINE*
+include_path: /[^\n]+/
+
+
+// https://hledger.org/1.34/hledger.html#if-block
+import_rule: _IF (match_field | match_and_line | match_or_line)+ transform+ _NEWLINE*
+
+match_or_line: match_or_line_value _NEWLINE
+match_or_line_value: /[^%&](.+)/
+
+match_and_line: match_and_line_value _NEWLINE
+match_and_line_value: "&" /(.+)/
+
+
+match_field: (match_or_key | match_and_key) match_field_value _NEWLINE
+match_or_key: "%" /[a-zA-Z0-9-_]+/
+match_and_key: "& %" /[a-zA-Z0-9-_]+/
+match_field_value: /.+/
+
+transform: _INDENT transform_key transform_value _NEWLINE?
+transform_key: _word_on_boundary
+transform_value: /[^\n]+/
+
+// _ means it will be inlined and not shown in the AST
+_key: "date"
+   | "date2"
+   | "status"
+   | "code"
+   | "description"
+   | /comment\d?/
+   | /account\d?/
+   | /amount\d?/
+   | /amount-in(-\d)?/
+   | /amount-out(-\d)?/
+   | /currency\d?/
+   | /balance\d?/
+
+_word_on_boundary: /[\w]+\b/
+
+_WS: /^\s+[^\n]+$/i
+_INDENT: "  "+
+_IF: "if" /\s?/ _NEWLINE?
+
+_NULL_LINE: /^\n$/i
+_EMPTY_LINE: /^[ \t]*[\r\n]/i
+_COMMENT: "#" /[^\n]*/
+
+%import common.NEWLINE -> _NEWLINE
+%import common.WORD -> _WORD
+%import common.CNAME -> _CNAME
+%import common.WS_INLINE -> _WS_INLINE
+
+%ignore _NULL_LINE
+%ignore _EMPTY_LINE
+%ignore _COMMENT
+%ignore _WS
