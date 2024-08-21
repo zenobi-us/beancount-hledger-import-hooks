@@ -6,7 +6,7 @@ setup:
     @echo "🍜 Setting up project"
     @echo ""
 
-    @yarn install
+    poetry install
 
     @echo ""
     @echo "👍 Done"
@@ -15,12 +15,16 @@ setup:
 lint:
     echo "Linting files..."
 
+    ruff check
+
     @echo ""
     @echo "👍 Done"
     @echo ""
 
 unittest:
     echo "Running unit tests..."
+
+    pytest
 
     @echo ""
     @echo "👍 Done"
@@ -35,6 +39,8 @@ integrationtest:
 
 build:
     echo "Building project..."
+
+    poetry build
 
     @echo ""
     @echo "👍 Done"

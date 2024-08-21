@@ -23,11 +23,13 @@ rich = "^13.7.1"
 smart-importer = "v0.5"
 
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pre-commit = "^3.8.0"
+ruff = "^0.6.1"
 pytest = "^8.3.2"
 debugpy = "^1.8.5"
-
+pytest-md-report = "^0.6.2"
+pydoc-markdown = "^4.8.2"
 
 [build-system]
 requires = ["poetry-core"]
@@ -36,3 +38,16 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.urls]
 issues = "https://github.com/zenobi-us/beancount-hledger-import-hooks/issues"
+
+[[tool.pydoc-markdown.loaders]]
+type = "python"
+search_path = ["./beancount_hledger_import_hooks"]
+
+[tool.pydoc-markdown.renderer]
+type = "markdown"
+
+
+[[tool.pydoc-markdown.renderer.pages]]
+title = "API Documentation"
+name = "index"
+output = "docs/api/index.md"

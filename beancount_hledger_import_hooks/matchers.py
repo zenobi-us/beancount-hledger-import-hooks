@@ -1,81 +1,101 @@
-from typing import Any, List, Union
+from typing import Literal
 
-from beancount_hledger_import_hooks import mappers
-
-
-class MatcherBase[T]:
-    def satisfies(self, transaction: T) -> bool:
-        raise NotImplementedError
+from beancount_hledger_import_hooks.interrogator import InterrogatorBase
 
 
-class MatcherSetBase[T](MatcherBase[T]):
-    pass
+class Matcher:
+    """
+    A match is a class that can be used to match a transaction
+
+    it has a kind, which can be a string that is one of:
+    - And
+    - Or
+    - Not
+
+    it has a collection of items, which can be a list of matchers
+    """
+
+    kind: Literal["And", "Or", "Not"]
+    items: list["Matcher | str"]
+
+    def __init__(self, *items: "Matcher | str", kind: Literal["And", "Or", "Not"]):
+        self.kind = kind
+        self.items = list(items)
 
 
-class MatcherTemplate[T](MatcherBase[T]):
-    template: str = ""
-
-    def __init__(self, template: str) -> None:
-        self.template = template
-
-    def satisfies(self, transaction: T) -> bool:
-        raise NotImplementedError
+class OrMatcher(Matcher):
+    def __init__(self, *items: "Matcher | str"):
+        super().__init__(*items, kind="Or")
 
 
-class MatcherAnd[T](MatcherSetBase[T]):
-    And: List[MatcherTemplate[T]] = []
-
-    def __init__(self, mapper: mappers.MatcherAndMapper) -> None:
-        rules = [MatcherTemplate(template) for template in mapper.value]
-
-        self.And = rules
-
-    def satisfies(self, transaction: T) -> bool:
-        return all(m.satisfies(transaction) for m in self.And)
+class AndMatcher(Matcher):
+    def __init__(self, *items: "Matcher | str"):
+        super().__init__(*items, kind="And")
 
 
-class MatcherOr[T](MatcherSetBase[T]):
-    Or: List[MatcherTemplate[T]] = []
-
-    def __init__(self, mapper: mappers.MatcherOrMapper) -> None:
-        rules = [MatcherTemplate(template) for template in mapper.value]
-
-        self.Or = rules
-
-    def satisfies(self, transaction: T) -> bool:
-        return any(m.satisfies(transaction) for m in self.Or)
+class NotMatcher(Matcher):
+    def __init__(self, *items: "Matcher | str"):
+        super().__init__(*items, kind="Not")
 
 
-class MatcherNot[T](MatcherSetBase[T]):
-    Not: List[MatcherTemplate[T]] = []
+def ResolveQuery[T](
+    transaction: T,
+    interrogator: InterrogatorBase[T],
+    query: Matcher | str,
+) -> bool:
+    """
+    Resolve a query against a transaction.
 
-    def __init__(self, mapper: mappers.MatcherNotMapper) -> None:
-        rules = [MatcherTemplate(template) for template in mapper.value]
+    Args:
+        query: The query to resolve
+        transaction: The transaction to resolve against
+        interrogator: A function that will resolve the transaction
+    """
+    if isinstance(query, str):
+        result = interrogator(query, transaction)
+        return result
 
-        self.Not = rules
+    if query.kind == "And":
+        """
+        An And matcher will ensure that all of the items are truthy.
 
-    def satisfies(self, transaction: T) -> bool:
-        return not any(m.satisfies(transaction) for m in self.Not)
+        if one item is falsy, then the result will be false
+        """
+        results = []
+        for m in query.items:
+            result = ResolveQuery(transaction, interrogator, m)
+            results.append(result)
 
+        result = all(results)
 
-type Matcher[T] = Union[MatcherAnd[T], MatcherOr[T], MatcherNot[T]]
+        return result
 
+    if query.kind == "Or":
+        """
+        An Or matcher will ensure that at least one of the items is truthy.
 
-def resolve_matcher_type[T](
-    mapper: Union[
-        mappers.MatcherAndMapper[T],
-        mappers.MatcherOrMapper[T],
-        mappers.MatcherNotMapper[T],
-        Any,
-    ],
-) -> Matcher[T]:
-    if isinstance(mapper, mappers.MatcherAndMapper[T]):
-        return MatcherAnd[T](mapper)
+        if one item is truthy, then the result will be true
+        """
+        results = []
+        for m in query.items:
+            result = ResolveQuery(transaction, interrogator, m)
+            results.append(result)
 
-    if isinstance(mapper, mappers.MatcherOrMapper[T]):
-        return MatcherOr[T](mapper)
+        result = any(results)
 
-    if isinstance(mapper, mappers.MatcherNotMapper[T]):
-        return MatcherNot[T](mapper)
+        return result
 
-    raise ValueError(f"Unknown matcher type: {mapper}")
+    if query.kind == "Not":
+        """
+        A Not matcher will ensure that none of the items are truthy.
+
+        if one item is truthy, then the result will be false
+        """
+        for m in query.items:
+            result = ResolveQuery(transaction, interrogator, m)
+            if result:
+                return False
+
+        return True
+
+    return False

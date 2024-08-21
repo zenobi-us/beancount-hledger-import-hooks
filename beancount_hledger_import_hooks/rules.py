@@ -1,11 +1,17 @@
 from typing import List
 
-from beancount_hledger_import_hooks.matchers import Matcher, resolve_matcher_type
-
+from beancount_hledger_import_hooks.interrogator import InterrogatorBase
 from beancount_hledger_import_hooks.mappers import (
     IncludeRuleMapper,
+    MatcherAndMapper,
+    MatcherNotMapper,
+    MatcherOrMapper,
     RuleSetMapper,
     TransactionRuleMapper,
+)
+from beancount_hledger_import_hooks.matchers import (
+    Matcher,
+    ResolveQuery,
 )
 from beancount_hledger_import_hooks.transform import Transform
 
@@ -31,8 +37,11 @@ class Rule[T]:
     - a list of transforms to apply
     """
 
-    matchers: List[Matcher[T]] = []
+    matcher: Matcher
+
     transforms: List[Transform[T]] = []
+
+    interrogator: InterrogatorBase[T]
 
     def __init__(self, mapper: TransactionRuleMapper[T] | IncludeRuleMapper[T]):
         """
@@ -41,11 +50,36 @@ class Rule[T]:
         if isinstance(mapper, IncludeRuleMapper[T]):
             raise ValueError("IncludeBlockMapper is not supported")
 
-        self.name = mapper.name
-
+        matchers: List[Matcher] = []
         for matcher in mapper.matchers:
-            resolved = resolve_matcher_type(matcher)
-            self.matchers.append(resolved)
+            if isinstance(matcher, MatcherAndMapper[T]):
+                matchers.append(
+                    Matcher(
+                        matcher.value,
+                        kind="And",
+                    )
+                )
+
+            if isinstance(matcher, MatcherOrMapper[T]):
+                matchers.append(
+                    Matcher(
+                        matcher.value,
+                        kind="Or",
+                    )
+                )
+
+            if isinstance(matcher, MatcherNotMapper[T]):
+                matchers.append(
+                    Matcher(
+                        matcher.value,
+                        kind="Not",
+                    )
+                )
+
+        self.matcher = Matcher(
+            *matchers,
+            kind="And",
+        )
 
         # for transform in mapper.transforms:
         #     self.transforms.append(TransformRule.parse_obj(transform))
@@ -54,11 +88,11 @@ class Rule[T]:
         """
         Test if any of the matchers match the transaction
         """
-        for matcher in self.matchers:
-            if matcher.satisfies(transaction):
-                return True
-
-        return False
+        return ResolveQuery(
+            transaction,
+            self.interrogator,
+            self.matcher,
+        )
 
     def transform(self, transaction: T):
         """

@@ -23,14 +23,6 @@ def matcher_command_has(key: str, value: str) -> str:
     return matcher_command("has", key, value)
 
 
-def matcher_command_is(key: str, value: str) -> str:
-    return matcher_command("is", key, value)
-
-
-def matcher_command_isnot(key: str, value: str) -> str:
-    return matcher_command("is_not", key, value)
-
-
 class TransformSetMapper(BaseModel):
     value: str = Field(..., alias="set_to")
 

@@ -32,11 +32,32 @@ jobs:
       - name: lint
         run: just lint
 
-      - name: test
+      - name: Run tests
+        env:
+          REPORT_OUTPUT: md_report.md
+        shell: bash
         run: |
-          just unittest
-          just build
-          just integrationtest
+          echo "REPORT_FILE=${REPORT_OUTPUT}" >> "$GITHUB_ENV"
+          pytest -v \
+            --md-report \
+            --md-report-flavor gfm \
+            --md-report-exclude-outcomes passed skipped xpassed \
+            --md-report-output "${REPORT_OUTPUT}"
+
+      - name: Output reports to the job summary when tests fail
+        if: failure()
+        shell: bash
+        run: |
+          if [ -f "$REPORT_FILE" ]; then
+            echo "<details><summary>Failed Test Report</summary>" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            cat "$REPORT_FILE" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "</details>" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: build
+        run: just build
 
       - name: docs
         run: just docs
