@@ -19,7 +19,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - uses: jdx/mise-action@d6e32c1
+      - uses: jdx/mise-action@d6e32c1796099e0f1f3ac741c220a8b7eae9e5dd
         with:
           version: v2024.8.12 # [default: latest] mise version to install
           install: true # [default: true] run `mise install`
