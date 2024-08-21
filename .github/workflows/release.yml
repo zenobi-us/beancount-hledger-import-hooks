@@ -55,8 +55,8 @@ jobs:
           cache: true # [default: true] cache mise using GitHub's cache
           log_level: debug # [default: info] log level
 
-      - name: Poetry
-        uses: ./.github/actions/setup-poetry
+      - name: Install Python Packages
+        uses: ./.github/actions/setup-dependencies
 
       - name: Preflight
         run: |
@@ -69,6 +69,12 @@ jobs:
       - if: ${{ needs.Process.outputs.releases_created == 'true' }}
         uses: |
           just publish
+
+      - if: ${{ needs.Process.outputs.releases_created == 'true' }}
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
 
       - if: ${{ needs.Process.outputs.prs_created == 'true' }}
         run: |

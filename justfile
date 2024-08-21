@@ -1,3 +1,5 @@
+export PATH := ".venv/bin:" + env_var('PATH')
+
 default:
     @just --list
 
@@ -6,7 +8,7 @@ setup:
     @echo "🍜 Setting up project"
     @echo ""
 
-    poetry install
+    pdm install
 
     @echo ""
     @echo "👍 Done"
@@ -16,6 +18,15 @@ lint:
     echo "Linting files..."
 
     ruff check
+
+    @echo ""
+    @echo "👍 Done"
+    @echo ""
+
+test:
+    echo "Linting files..."
+
+    pytest
 
     @echo ""
     @echo "👍 Done"
@@ -40,7 +51,7 @@ integrationtest:
 build:
     echo "Building project..."
 
-    poetry build
+    pdm build
 
     @echo ""
     @echo "👍 Done"

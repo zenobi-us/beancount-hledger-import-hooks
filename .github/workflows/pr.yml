@@ -27,7 +27,7 @@ jobs:
           log_level: debug # [default: info] log level
 
       - name: Install Python Packages
-        uses: ./.github/actions/setup-poetry
+        uses: ./.github/actions/setup-dependencies
 
       - name: lint
         run: just lint
@@ -37,12 +37,12 @@ jobs:
           REPORT_OUTPUT: md_report.md
         shell: bash
         run: |
-          echo "REPORT_FILE=${REPORT_OUTPUT}" >> "$GITHUB_ENV"
-          pytest -v \
+          pdm run pytest -v \
             --md-report \
             --md-report-flavor gfm \
             --md-report-exclude-outcomes passed skipped xpassed \
             --md-report-output "${REPORT_OUTPUT}"
+          echo "REPORT_FILE=${REPORT_OUTPUT}" >> "$GITHUB_ENV"
 
       - name: Output reports to the job summary when tests fail
         if: failure()
