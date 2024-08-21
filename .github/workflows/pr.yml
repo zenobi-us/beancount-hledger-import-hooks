@@ -19,9 +19,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - uses: jdx/mise-action@3bc85396a273ed82bba5e53a15174bbf9dba095c
+      - uses: jdx/mise-action@d6e32c1
         with:
-          version: 2023.12.0 # [default: latest] mise version to install
+          version: v2024.8.12 # [default: latest] mise version to install
           install: true # [default: true] run `mise install`
           cache: true # [default: true] cache mise using GitHub's cache
           log_level: debug # [default: info] log level
