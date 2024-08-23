@@ -1,3 +1,5 @@
+from typing import NamedTuple
+
 from jinja2 import Environment
 
 
@@ -64,9 +66,9 @@ class JinjaInterrogator(InterrogatorBase[dict]):
     def filter_get_dict_values(self, x: dict):
         return x.values()
 
-    def __call__(self, source: str, context: dict):
+    def __call__(self, source: str, context: NamedTuple):
         template = self.env.compile_expression(source)
-        merged_context = {**self.context, **context}
+        merged_context = {**self.context, **context._asdict()}
         result = template(Transaction=merged_context)
 
         return result

@@ -1,0 +1,5 @@
+if
+ACCOUNT SERVICING FEE
+DEBIT INTEREST CHARGED
+  account2 Expenses:Bank:MyBank:Fees
+  comment 🏦

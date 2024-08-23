@@ -1,0 +1,9 @@
+if
+DYMOCKS BOOKS
+  account2 expenses:self:entertainment:books
+  comment icon:📖
+
+if
+KOBO SOFTWARE IRELAND
+  account2 expenses:self:entertainment:ebooks
+  comment icon:📖💻

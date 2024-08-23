@@ -1,16 +1,19 @@
-from typing import List
+from typing import List, Union
 
 from beancount_hledger_import_hooks.interrogator import InterrogatorBase
 from beancount_hledger_import_hooks.mappers import (
-    IncludeRuleMapper,
     MatcherAndMapper,
     MatcherNotMapper,
     MatcherOrMapper,
     RuleSetMapper,
     TransactionRuleMapper,
+    TransformMapper,
 )
 from beancount_hledger_import_hooks.matchers import (
+    AndMatcher,
     Matcher,
+    NotMatcher,
+    OrMatcher,
     ResolveQuery,
 )
 from beancount_hledger_import_hooks.transform import Transform
@@ -43,46 +46,18 @@ class Rule[T]:
 
     interrogator: InterrogatorBase[T]
 
-    def __init__(self, mapper: TransactionRuleMapper[T] | IncludeRuleMapper[T]):
+    def __init__(
+        self,
+        matcher: Matcher,
+        transforms: List[Transform[T]],
+        interrogator: InterrogatorBase[T],
+    ):
         """
         Create a transformer from a block
         """
-        if isinstance(mapper, IncludeRuleMapper[T]):
-            raise ValueError("IncludeBlockMapper is not supported")
-
-        matchers: List[Matcher] = []
-        for matcher in mapper.matchers:
-            if isinstance(matcher, MatcherAndMapper[T]):
-                matchers.append(
-                    Matcher(
-                        matcher.value,
-                        kind="And",
-                    )
-                )
-
-            if isinstance(matcher, MatcherOrMapper[T]):
-                matchers.append(
-                    Matcher(
-                        matcher.value,
-                        kind="Or",
-                    )
-                )
-
-            if isinstance(matcher, MatcherNotMapper[T]):
-                matchers.append(
-                    Matcher(
-                        matcher.value,
-                        kind="Not",
-                    )
-                )
-
-        self.matcher = Matcher(
-            *matchers,
-            kind="And",
-        )
-
-        # for transform in mapper.transforms:
-        #     self.transforms.append(TransformRule.parse_obj(transform))
+        self.matcher = matcher
+        self.transforms = transforms
+        self.interrogator = interrogator
 
     def satisfies(self, transaction: T) -> bool:
         """
@@ -113,16 +88,60 @@ class Rule[T]:
 
         return transaction
 
+    @classmethod
+    def from_mapper[F](
+        cls,
+        matchers: List[Union[MatcherAndMapper, MatcherOrMapper, MatcherNotMapper]],
+        transforms: List[TransformMapper],
+        interrogator: InterrogatorBase[F],
+    ) -> "Rule[F]":
+        mapped_matchers: List[Matcher] = []
+        mapped_transforms: List[Transform[F]] = []
+
+        for matcher in matchers:
+            if isinstance(matcher, MatcherAndMapper):
+                mapped_matchers.append(
+                    AndMatcher(
+                        matcher.value,
+                    )
+                )
+
+            if isinstance(matcher, MatcherOrMapper):
+                mapped_matchers.append(
+                    OrMatcher(
+                        matcher.value,
+                    )
+                )
+
+            if isinstance(matcher, MatcherNotMapper):
+                mapped_matchers.append(
+                    NotMatcher(
+                        matcher.value,
+                    )
+                )
+
+        for transform in transforms:
+            mapped_transforms.append(
+                Transform(field=transform.key, template=transform.value)
+            )
+
+        return Rule[F](
+            matcher=OrMatcher(
+                *mapped_matchers,
+            ),
+            transforms=mapped_transforms,
+            interrogator=interrogator,
+        )
+
 
 class RuleSet[T]:
     rules: List[Rule[T]] = []
 
-    def __init__(self, ruleset: RuleSetMapper):
+    def __init__(self, rules: List[Rule[T]]):
         """
         Create a transformer set from a block set
         """
-        for rule in ruleset.rules:
-            self.rules.append(Rule(rule))
+        self.rules = rules
 
     def run(self, transactions: List[T]) -> List[T]:
         """
@@ -133,3 +152,21 @@ class RuleSet[T]:
                 transaction = rule.process(transaction)
 
         return transactions
+
+    @classmethod
+    def from_mapper[F](
+        cls, mapper: RuleSetMapper, interrogator: InterrogatorBase[F]
+    ) -> "RuleSet[F]":
+        rules: List[Rule[F]] = []
+
+        for rule in mapper.rules:
+            if isinstance(rule, TransactionRuleMapper):
+                rules.append(
+                    Rule.from_mapper(
+                        rule.matchers,
+                        rule.transforms,
+                        interrogator=interrogator,
+                    )
+                )
+
+        return RuleSet[F](rules=rules)

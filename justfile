@@ -60,10 +60,20 @@ build:
 docs:
     echo "Generating documentation..."
 
+    mkdocs build
+
     @echo ""
     @echo "👍 Done"
     @echo ""
 
+docs-serve:
+    echo "Serving documentation..."
+
+    mkdocs serve
+
+    @echo ""
+    @echo "👍 Done"
+    @echo ""
 publish TAG="next":
     echo "Publishing package..."
 

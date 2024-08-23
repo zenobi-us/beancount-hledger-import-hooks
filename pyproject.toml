@@ -2,10 +2,7 @@
 name = "beancount-hledger-import-hooks"
 version = "0.0.1"
 description = "A set of post processing hooks for beancount ingest that uses hledger csv import rules files to automatically categorize transactions."
-authors = [
-    { name = "Zeno Jiricek", email = "airtonix@users.noreply.github.com" },
-    { name = "Zenobius Jiricek", email = "airtonix@users.noreply.github.com" },
-]
+authors = [{ name = "airtonix", email = "airtonix@users.noreply.github.com" }]
 dependencies = [
     "beancount==2.3.6",
     "click<9.0.0,>=8.1.7",
@@ -30,19 +27,6 @@ documentation = "https://github.com/zenobi-us/beancount-hledger-import-hooks/blo
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
-[[tool.pydoc-markdown.loaders]]
-type = "python"
-search_path = ["./beancount_hledger_import_hooks"]
-
-[tool.pydoc-markdown.renderer]
-type = "markdown"
-
-
-[[tool.pydoc-markdown.renderer.pages]]
-title = "API Documentation"
-name = "index"
-output = "docs/api/index.md"
-
 [tool.pdm]
 distribution = true
 
@@ -53,7 +37,6 @@ dev = [
     "pytest<9.0.0,>=8.3.2",
     "debugpy<2.0.0,>=1.8.5",
     "pytest-md-report<1.0.0,>=0.6.2",
-    "pydoc-markdown<5.0.0,>=4.8.2",
 ]
 
 [tool.pdm.build]

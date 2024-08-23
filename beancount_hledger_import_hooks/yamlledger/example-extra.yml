@@ -1,12 +1,15 @@
 ---
 rules:
-- matchers:
-  - and_is: description.is("from extra file")
-  - or_is: description.is("some extra info")
-  transforms:
-  - set_to: category("Some extra category")
-  - set_to: account("Some EXTRA account")
-- matchers:
-  - and_is: description.is("Drakes")
-  transforms:
-  - set_to: Account("Expenses:Food:Groceries:Drakes")
+  - matchers:
+      - and_is: Transaction.Description.is("from extra file")
+      - or_is: Transaction.Description.is("some extra info")
+    transforms:
+      - key: comment
+        value: omg comments!
+      - key: account2
+        value: Some:EXTRA:account
+  - matchers:
+      - and_is: Transaction.Description.is("Drakes")
+    transforms:
+      - key: account2
+        value: Expenses:Food:Groceries:Drakes

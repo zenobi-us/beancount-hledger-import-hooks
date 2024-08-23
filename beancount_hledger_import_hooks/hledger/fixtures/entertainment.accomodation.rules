@@ -1,0 +1,5 @@
+if
+VISA DEBIT PURCHASE.*HOTEL FOOBAR
+VISA DEBIT PURCHASE.*BOOKING.COM
+  account2 expenses:self:entertainment:accomodation
+  comment 🏨

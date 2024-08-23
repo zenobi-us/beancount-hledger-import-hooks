@@ -15,9 +15,8 @@ from beancount_hledger_import_hooks.mappers import (
     MatcherOrMapper,
     RuleSetMapper,
     TransactionRuleMapper,
-    TransformSetMapper,
+    TransformMapper,
     matcher_command_has,
-    transform_command_set,
 )
 
 
@@ -47,7 +46,7 @@ class HledgerTransformer(Transformer):
         for item in items:
             if isinstance(item, MatcherOrMapper) or isinstance(item, MatcherAndMapper):
                 matchers.append(item)
-            elif isinstance(item, TransformSetMapper):
+            elif isinstance(item, TransformMapper):
                 transforms.append(item)
 
             else:
@@ -96,8 +95,7 @@ class HledgerTransformer(Transformer):
     #
     # Transform Rule
     def transform(self, value):
-        return TransformSetMapper(set_to=transform_command_set(value[0], value[1]))
-        # return {"transform": {"key": value[0], "value": value[1]}}
+        return TransformMapper(key=value[0], value=value[1].strip())
 
     def transform_value(self, value: Token):
         return value[0]

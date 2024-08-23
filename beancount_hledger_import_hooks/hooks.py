@@ -5,15 +5,17 @@ from beancount.core import data as beancount_datatypes
 from smart_importer.hooks import ImporterHook
 
 from beancount_hledger_import_hooks.hledger.loader import hledgerblocks
-from beancount_hledger_import_hooks.yamlledger.loader import yamlblocks
+from beancount_hledger_import_hooks.interrogator import JinjaInterrogator
 from beancount_hledger_import_hooks.rules import RuleSet
+from beancount_hledger_import_hooks.yamlledger.loader import yamlblocks
 
 
 class WithYamlRules(ImporterHook):
     def __init__(self, *args, **kwargs):
         self.rules_path = kwargs.get("rules_path", None)
         yamlruleset = yamlblocks(self.rules_path)
-        self.rules = RuleSet(yamlruleset)
+        interrogator = JinjaInterrogator()
+        self.rules = RuleSet.from_mapper(mapper=yamlruleset, interrogator=interrogator)
         self.lock = threading.Lock()
 
     def __call__(
@@ -34,14 +36,15 @@ class WithYamlRules(ImporterHook):
         """
         self.account = importer.file_account(file)
         with self.lock:
-            return self.rules.run(imported_entries)
+            return self.rules.run(transactions=imported_entries)
 
 
 class WithHledgerRules(ImporterHook):
     def __init__(self, *args, **kwargs):
         self.rules_path = kwargs.get("rules_path", None)
         blocks = hledgerblocks(self.rules_path)
-        self.rules = RuleSet(blocks)
+        interrogator = JinjaInterrogator()
+        self.rules = RuleSet.from_mapper(mapper=blocks, interrogator=interrogator)
         self.lock = threading.Lock()
 
     def __call__(
@@ -62,4 +65,4 @@ class WithHledgerRules(ImporterHook):
         """
         self.account = importer.file_account(file)
         with self.lock:
-            return self.rules.run(imported_entries)
+            return self.rules.run(transactions=imported_entries)
