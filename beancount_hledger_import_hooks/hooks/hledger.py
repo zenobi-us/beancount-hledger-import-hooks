@@ -1,0 +1,46 @@
+import threading
+from pathlib import Path
+from typing import Callable
+
+from beancount.core import data as beancount_datatypes
+from smart_importer.hooks import ImporterHook
+
+from beancount_hledger_import_hooks.hledger.loader import hledgerblocks
+from beancount_hledger_import_hooks.interrogator import JinjaInterrogator
+from beancount_hledger_import_hooks.rules import RuleSet
+
+
+class WithHledgerRules(ImporterHook):
+    def __init__(self, rules_path: Path | None = None):
+        self.rules_path = rules_path
+
+        if self.rules_path is None:
+            raise ValueError("rules_path is required")
+
+        blocks = hledgerblocks(self.rules_path)
+        interrogator = JinjaInterrogator(
+            context_accessor=lambda transaction: transaction._asdict()
+        )
+        self.rules = RuleSet.from_mapper(mapper=blocks, interrogator=interrogator)
+        self.lock = threading.Lock()
+
+    def __call__(
+        self,
+        importer: Callable,
+        file: str,
+        imported_entries: beancount_datatypes.Entries,
+        existing_entries: beancount_datatypes.Entries,
+    ):
+        """Runs a series of ledger rules over imported transactions.
+
+        Args:
+            imported_entries: The list of imported entries.
+            existing_entries: The list of existing entries
+
+        Returns:
+            A list of entries, modified by this hook.
+        """
+        self.account = importer.file_account(file)
+
+        with self.lock:
+            return self.rules.run(transactions=imported_entries)

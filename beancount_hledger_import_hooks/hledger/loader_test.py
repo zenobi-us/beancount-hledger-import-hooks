@@ -10,7 +10,7 @@ here = Path(__file__).parent
 
 
 def test_hledgerblocks():
-    rules_path = here / "fixtures/all.rules"
+    rules_path = here / "fixtures" / "all.rules"
     assert rules_path.exists()
 
     blocks = hledgerblocks(rules_path)

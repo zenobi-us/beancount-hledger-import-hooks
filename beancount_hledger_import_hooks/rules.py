@@ -44,13 +44,13 @@ class Rule[T]:
 
     transforms: List[Transform[T]] = []
 
-    interrogator: InterrogatorBase[T]
+    interrogator: InterrogatorBase
 
     def __init__(
         self,
         matcher: Matcher,
         transforms: List[Transform[T]],
-        interrogator: InterrogatorBase[T],
+        interrogator: InterrogatorBase,
     ):
         """
         Create a transformer from a block
@@ -93,8 +93,8 @@ class Rule[T]:
         cls,
         matchers: List[Union[MatcherAndMapper, MatcherOrMapper, MatcherNotMapper]],
         transforms: List[TransformMapper],
-        interrogator: InterrogatorBase[F],
-    ) -> "Rule[F]":
+        interrogator: InterrogatorBase,
+    ) -> "Rule[F]":  # type: ignore
         mapped_matchers: List[Matcher] = []
         mapped_transforms: List[Transform[F]] = []
 
@@ -155,8 +155,8 @@ class RuleSet[T]:
 
     @classmethod
     def from_mapper[F](
-        cls, mapper: RuleSetMapper, interrogator: InterrogatorBase[F]
-    ) -> "RuleSet[F]":
+        cls, mapper: RuleSetMapper, interrogator: InterrogatorBase
+    ) -> "RuleSet[F]":  # type: ignore
         rules: List[Rule[F]] = []
 
         for rule in mapper.rules:

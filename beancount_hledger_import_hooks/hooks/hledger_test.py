@@ -4,6 +4,9 @@ from pathlib import Path
 from beancount.ingest import regression_pytest
 from beancount.ingest.importers import csv
 from beancount.ingest.importers.csv import Col
+from smart_importer.hooks import apply_hooks
+
+from beancount_hledger_import_hooks.hooks.hledger import WithHledgerRules
 
 
 class Importer(csv.Importer):
@@ -25,9 +28,18 @@ class Importer(csv.Importer):
 
 
 here = Path(__file__).parent
-directory = here / "hledger/fixtures"
-importer = Importer(
-    account="Assets:Bank:Checking",
+directory = here / "fixtures"
+
+hledger_hook = WithHledgerRules(
+    rules_path=here.parent / "hledger" / "fixtures" / "all.rules"
+)
+
+
+importer = apply_hooks(
+    Importer(
+        account="Assets:Bank:Checking",
+    ),
+    [hledger_hook],
 )
 
 

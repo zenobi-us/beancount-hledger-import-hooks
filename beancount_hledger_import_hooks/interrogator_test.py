@@ -1,16 +1,16 @@
+from beancount import loader
+
 from beancount_hledger_import_hooks.interrogator import JinjaInterrogator
 
 
 def test_jinja_interrogator():
+    new_entries, _, __ = loader.load_string("""
+        2016-01-06 *
+            Expenses:Groceries    1.06 USD
+    """)
     interrogator = JinjaInterrogator()
 
-    assert interrogator("Transaction.foo == 1", {"foo": 1})
-    assert not interrogator("Transaction.foo == 2", {"foo": 1})
+    assert interrogator("'payee' in Transaction|keys|join(' ')", new_entries[0])
     assert interrogator(
-        "Transaction.foo.bar.baz.endswith('kaboom')",
-        {"foo": {"bar": {"baz": "kaboom"}}},
+        "Transaction.postings.0.units.number|float == 1.06", new_entries[0]
     )
-
-    assert interrogator("'bar' in Transaction|values|join(' ')", {"foo": "bar"})
-    assert not interrogator("'baz' in Transaction|values|join(' ')", {"foo": "bar"})
-    assert interrogator("'foo' in Transaction|keys|join(' ')", {"foo": "bar"})

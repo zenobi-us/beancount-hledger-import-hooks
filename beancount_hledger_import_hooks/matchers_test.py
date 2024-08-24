@@ -1,3 +1,5 @@
+from beancount import loader
+
 from beancount_hledger_import_hooks.interrogator import JinjaInterrogator
 from beancount_hledger_import_hooks.matchers import (
     AndMatcher,
@@ -6,64 +8,82 @@ from beancount_hledger_import_hooks.matchers import (
     ResolveQuery,
 )
 
+interrogator = JinjaInterrogator()
+transactions, _, __ = loader.load_string("""
+    2016-01-06 * "Debit Wholefoods"
+        Assets:Bank:Account    1.06 USD
+
+    2016-01-07 * "Debit"
+        Assets:Bank:Account    1.06 USD
+
+    2016-01-08 * "Wholefoods"
+        Assets:Bank:Account    1.06 USD
+
+    2016-01-09 * "Credit"
+        Assets:Bank:Account    1.06 USD
+
+    2016-01-10 * "Groceries"
+        Assets:Bank:Account    1.06 USD
+
+    2016-01-11 * "Groceries Wholefoods"
+        Assets:Bank:Account    1.06 USD
+
+    2016-01-12 * "Groceries Debit"
+        Assets:Bank:Account    1.06 USD
+""")
+
 
 def test_logicgate_and():
-    interrogator = JinjaInterrogator()
     query = Matcher(
-        "'Debit' in Transaction.Description",
-        "'Wholefoods' in Transaction.Description",
+        "'Debit' in Transaction.narration",
+        "'Wholefoods' in Transaction.narration",
         kind="And",
     )
 
-    assert ResolveQuery({"Description": "Debit Wholefoods"}, interrogator, query)
-    assert not ResolveQuery({"Description": "Debit"}, interrogator, query)
-    assert not ResolveQuery({"Description": "Wholefoods"}, interrogator, query)
-    assert not ResolveQuery({"Description": "Credit"}, interrogator, query)
+    assert ResolveQuery(transactions[0], interrogator, query)
+    assert not ResolveQuery(transactions[1], interrogator, query)
+    assert not ResolveQuery(transactions[2], interrogator, query)
+    assert not ResolveQuery(transactions[3], interrogator, query)
 
 
 def test_logicgate_or():
-    interrogator = JinjaInterrogator()
     query = Matcher(
-        "'Debit' in Transaction.Description",
-        "'Wholefoods' in Transaction.Description",
+        "'Debit' in Transaction.narration",
+        "'Wholefoods' in Transaction.narration",
         kind="Or",
     )
 
-    assert ResolveQuery({"Description": "Debit"}, interrogator, query)
-    assert ResolveQuery({"Description": "Wholefoods"}, interrogator, query)
-    assert ResolveQuery({"Description": "Debit Wholefoods"}, interrogator, query)
-    assert not ResolveQuery({"Description": "Credit"}, interrogator, query)
-    assert ResolveQuery({"Description": "Credit Debit"}, interrogator, query)
+    assert ResolveQuery(transactions[0], interrogator, query)
+    assert ResolveQuery(transactions[1], interrogator, query)
+    assert ResolveQuery(transactions[2], interrogator, query)
+    assert not ResolveQuery(transactions[3], interrogator, query)
 
 
 def test_logicgate_not():
-    interrogator = JinjaInterrogator()
     query = Matcher(
-        "'Debit' in Transaction.Description",
+        "'Debit' in Transaction.narration",
         kind="Not",
     )
 
-    assert not ResolveQuery({"Description": "Debit"}, interrogator, query)
-    assert ResolveQuery({"Description": "Credit"}, interrogator, query)
-    assert not ResolveQuery({"Description": "Credit Debit"}, interrogator, query)
+    assert not ResolveQuery(transactions[0], interrogator, query)
+    assert not ResolveQuery(transactions[1], interrogator, query)
+    assert ResolveQuery(transactions[2], interrogator, query)
+    assert ResolveQuery(transactions[3], interrogator, query)
 
 
 def test_nested_logic():
-    interrogator = JinjaInterrogator()
-
     query = OrMatcher(
         AndMatcher(
-            "'Debit' in Transaction.Description",
-            "'Wholefoods' in Transaction.Description",
+            "'Debit' in Transaction.narration",
+            "'Wholefoods' in Transaction.narration",
         ),
-        "'Groceries' in Transaction.Description",
+        "'Groceries' in Transaction.narration",
     )
 
-    assert ResolveQuery({"Description": "Debit Wholefoods"}, interrogator, query)
-    assert ResolveQuery({"Description": "Groceries"}, interrogator, query)
-    assert not ResolveQuery({"Description": "Debit"}, interrogator, query)
-    assert not ResolveQuery({"Description": "Wholefoods"}, interrogator, query)
-    assert not ResolveQuery({"Description": "Credit"}, interrogator, query)
-    assert not ResolveQuery({"Description": "Credit Debit"}, interrogator, query)
-    assert ResolveQuery({"Description": "Groceries Debit"}, interrogator, query)
-    assert ResolveQuery({"Description": "Groceries Wholefoods"}, interrogator, query)
+    assert ResolveQuery(transactions[0], interrogator, query)
+    assert not ResolveQuery(transactions[1], interrogator, query)
+    assert not ResolveQuery(transactions[2], interrogator, query)
+    assert not ResolveQuery(transactions[3], interrogator, query)
+    assert ResolveQuery(transactions[4], interrogator, query)
+    assert ResolveQuery(transactions[5], interrogator, query)
+    assert ResolveQuery(transactions[6], interrogator, query)

@@ -1,9 +1,10 @@
-from typing import NamedTuple
+from ast import Dict
+from typing import Any
 
 from jinja2 import Environment
 
 
-class InterrogatorBase[T]:
+class InterrogatorBase:
     """
     An interrogator is a class that can be
     called with a source string and a context.
@@ -11,11 +12,14 @@ class InterrogatorBase[T]:
     The interrogator will return a boolean value.
     """
 
-    def __call__(self, source: str, context: T) -> bool:
+    def __call__(self, source: str, context: Any) -> bool:
         raise NotImplementedError
 
+    def context_accessor(self, transaction: Any) -> Dict:
+        return transaction._asdict()
 
-class JinjaInterrogator(InterrogatorBase[dict]):
+
+class JinjaInterrogator(InterrogatorBase):
     """
     A JinjaInterrogator is a class that stores context and executes a [jinja](https://jinja.palletsprojects.com/en/3.1.x/) expression.
 
@@ -51,11 +55,8 @@ class JinjaInterrogator(InterrogatorBase[dict]):
 
     """
 
-    context: dict
-
-    def __init__(self, context: dict | None = None):
+    def __init__(self):
         self.env = Environment()
-        self.context = context or {}
 
         self.env.filters["keys"] = self.filter_get_dict_keys
         self.env.filters["values"] = self.filter_get_dict_values
@@ -66,9 +67,9 @@ class JinjaInterrogator(InterrogatorBase[dict]):
     def filter_get_dict_values(self, x: dict):
         return x.values()
 
-    def __call__(self, source: str, context: NamedTuple):
+    def __call__(self, source: str, transaction: Any):
         template = self.env.compile_expression(source)
-        merged_context = {**self.context, **context._asdict()}
+        merged_context = self.context_accessor(transaction)
         result = template(Transaction=merged_context)
 
         return result

@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Any, Literal
 
 from beancount_hledger_import_hooks.interrogator import InterrogatorBase
 
@@ -38,9 +38,9 @@ class NotMatcher(Matcher):
         super().__init__(*items, kind="Not")
 
 
-def ResolveQuery[T](
-    transaction: T,
-    interrogator: InterrogatorBase[T],
+def ResolveQuery(
+    transaction: Any,
+    interrogator: InterrogatorBase,
     query: Matcher | str,
 ) -> bool:
     """
