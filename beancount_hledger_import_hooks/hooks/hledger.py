@@ -18,9 +18,7 @@ class WithHledgerRules(ImporterHook):
             raise ValueError("rules_path is required")
 
         blocks = hledgerblocks(self.rules_path)
-        interrogator = JinjaInterrogator(
-            context_accessor=lambda transaction: transaction._asdict()
-        )
+        interrogator = JinjaInterrogator()
         self.rules = RuleSet.from_mapper(mapper=blocks, interrogator=interrogator)
         self.lock = threading.Lock()
 

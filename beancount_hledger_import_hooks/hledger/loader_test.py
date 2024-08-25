@@ -1,6 +1,7 @@
 from pathlib import Path
+from textwrap import dedent
 
-from beancount_hledger_import_hooks.hledger.loader import hledgerblocks
+from beancount_hledger_import_hooks.hledger.loader import hledger_parser, hledgerblocks
 from beancount_hledger_import_hooks.mappers import (
     TransactionRuleMapper,
     TransformMapper,
@@ -43,3 +44,14 @@ def test_hledgerblocks_taxrules():
     assert isinstance(blocks.rules[0].transforms[1], TransformMapper)
     assert blocks.rules[0].transforms[1].key == "comment"
     assert blocks.rules[0].transforms[1].value == "icon:🧑‍💼"
+
+
+def test_parse_single_rule():
+    rule = dedent("""
+    if
+        VISA DEBIT PURCHASE.*HOTEL FOOBAR
+        VISA DEBIT PURCHASE.*BOOKING.COM
+            account2 expenses:self:entertainment:accomodation
+    """)
+    result = hledger_parser.parse(rule)
+    assert result

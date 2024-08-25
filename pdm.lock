@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:fc640fff4f335f35b92383d576af746979197b980e9248cc2343588740fb0dd9"
+content_hash = "sha256:695f783557501768d808424ca9934f934be2e26f6916518a8efe6029b789a4c8"
 
 [[metadata.targets]]
 requires_python = "~=3.12"
@@ -202,6 +202,15 @@ files = [
     {file = "debugpy-1.8.5-cp312-cp312-win_amd64.whl", hash = "sha256:28ced650c974aaf179231668a293ecd5c63c0a671ae6d56b8795ecc5d2f48d3c"},
     {file = "debugpy-1.8.5-py2.py3-none-any.whl", hash = "sha256:55919dce65b471eff25901acf82d328bbd5b833526b6c1364bd5133754777a44"},
     {file = "debugpy-1.8.5.zip", hash = "sha256:b2112cfeb34b4507399d298fe7023a16656fc553ed5246536060ca7bd0e668d0"},
+]
+
+[[package]]
+name = "dedent"
+version = "0.5"
+summary = "Write inline code as easily as it should be"
+groups = ["default"]
+files = [
+    {file = "dedent-0.5.tar.gz", hash = "sha256:2235516b3010d5b7d12b2041cbf4b087f6339922e0ddf9c2cc00511138a8d737"},
 ]
 
 [[package]]
