@@ -68,8 +68,33 @@ class JinjaInterrogator(InterrogatorBase):
         return x.values()
 
     def __call__(self, source: str, transaction: Any):
-        template = self.env.compile_expression(source)
-        merged_context = self.context_accessor(transaction)
-        result = template(Transaction=merged_context)
+        try:
+            template = self.env.compile_expression(source)
+        except Exception:
+            raise InterrogatorExpressionError(f"Error evaluating expression: {source}")
+
+        try:
+            merged_context = self.context_accessor(transaction)
+        except Exception:
+            raise InterrogatorContextMergeError(f"Error merging context: {transaction}")
+
+        try:
+            result = template(Transaction=merged_context)
+        except Exception:
+            raise InterrogatorEvaluateExpressionError(
+                f"Error evaluating expression: {source}"
+            )
 
         return result
+
+
+class InterrogatorExpressionError(Exception):
+    pass
+
+
+class InterrogatorContextMergeError(Exception):
+    pass
+
+
+class InterrogatorEvaluateExpressionError(Exception):
+    pass

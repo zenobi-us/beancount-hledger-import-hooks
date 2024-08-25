@@ -63,11 +63,13 @@ class Rule[T]:
         """
         Test if any of the matchers match the transaction
         """
-        return ResolveQuery(
+        result = ResolveQuery(
             transaction,
             self.interrogator,
             self.matcher,
         )
+
+        return result
 
     def transform(self, transaction: T):
         """

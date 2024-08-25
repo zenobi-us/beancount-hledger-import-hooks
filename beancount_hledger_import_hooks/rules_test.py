@@ -27,8 +27,8 @@ def test_ruleset_satisfies():
     rule = TransactionRuleMapper(
         matchers=list(
             [
-                MatcherAndMapper(and_is="'Debit' in Transaction.Description"),
-                MatcherAndMapper(and_is="'Wholefoods' in Transaction.Description"),
+                MatcherAndMapper(and_is="'Debit' in Transaction.narration"),
+                MatcherAndMapper(and_is="'Wholefoods' in Transaction.narration"),
             ]
         ),
         transforms=[
@@ -51,10 +51,5 @@ def test_ruleset_satisfies():
 
     assert len(result) == 1
     assert result[0].postings[0].account == "Assets:Cash"
+    assert result[0].postings[0].units.number == Decimal("1.06")
     assert result[0].postings[1].account == "Expenses:Food:Groceries"
-    assert result[0].postings[1].units.number == Decimal("1.06")
-
-    # assert result[1]["Account2"] == "Expenses:Food:Groceries 100"
-    # assert result[2]["Account2"] == "Expenses:Food:Groceries 100"
-    # assert "Account2" not in result[3]
-    # assert "Expenses:Food:Groceries" not in result[3]

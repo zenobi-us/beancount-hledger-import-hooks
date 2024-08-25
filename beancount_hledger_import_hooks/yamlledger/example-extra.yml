@@ -1,15 +1,16 @@
 ---
 rules:
   - matchers:
-      - and_is: Transaction.Description.is("from extra file")
-      - or_is: Transaction.Description.is("some extra info")
+      - and_is: Transaction.narration == "from extra file"
+      - or_is: Transaction.narration == "some extra info"
     transforms:
       - key: comment
         value: omg comments!
       - key: account2
         value: Some:EXTRA:account
   - matchers:
-      - and_is: Transaction.Description.is("Drakes")
+      - and_is: |-
+          "Drakes" in Transaction.narration
     transforms:
       - key: account2
         value: Expenses:Food:Groceries:Drakes

@@ -28,11 +28,10 @@ class Importer(csv.Importer):
 
 
 here = Path(__file__).parent
+root = here.parent
 directory = here / "fixtures"
 
-hledger_hook = WithHledgerRules(
-    rules_path=here.parent / "hledger" / "fixtures" / "all.rules"
-)
+hledger_hook = WithHledgerRules(rules_path=root / "hledger" / "fixtures" / "all.rules")
 
 
 importer = apply_hooks(

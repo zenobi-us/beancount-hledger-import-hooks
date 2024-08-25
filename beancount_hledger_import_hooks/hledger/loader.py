@@ -16,8 +16,11 @@ from beancount_hledger_import_hooks.mappers import (
     RuleSetMapper,
     TransactionRuleMapper,
     TransformMapper,
-    matcher_command_has,
 )
+
+
+def transaction_field_has(field: str, value: str) -> str:
+    return f'"{value.strip()}" in Transaction.{field.strip()}'
 
 
 class HledgerTransformer(Transformer):
@@ -58,7 +61,7 @@ class HledgerTransformer(Transformer):
     #
     # Whole Line Match OR Rule
     def match_or_line(self, value):
-        return MatcherOrMapper(or_is=matcher_command_has("row", value[0]))
+        return MatcherOrMapper(or_is=transaction_field_has("narration", value[0]))
 
     def match_or_line_value(self, value):
         return str(value[0]).strip()
@@ -66,7 +69,7 @@ class HledgerTransformer(Transformer):
     #
     # Whole Line Match AND Rule
     def match_and_line(self, value):
-        return MatcherAndMapper(and_is=matcher_command_has("row", value[0]))
+        return MatcherAndMapper(and_is=transaction_field_has("narration", value[0]))
 
     def match_and_line_value(self, value):
         return str(value[0]).strip()
@@ -77,9 +80,9 @@ class HledgerTransformer(Transformer):
         key = value[0]
         value = value[1]
         if "or" in key:
-            return MatcherOrMapper(or_is=matcher_command_has(key["or"], value))
+            return MatcherOrMapper(or_is=transaction_field_has(key["or"], value))
         elif "and" in key:
-            return MatcherAndMapper(and_is=matcher_command_has(key["and"], value))
+            return MatcherAndMapper(and_is=transaction_field_has(key["and"], value))
         else:
             raise InvalidMatchFieldKeyError(key)
 

@@ -1,8 +1,8 @@
 ---
 rules:
   - matchers:
-      - and_is: Transaction.Description.is("Some description")
-      - or_is: Transaction.Description.is("Some other description")
+      - and_is: Transaction.narration == "Some description"
+      - or_is: Transaction.narration == "Some other description"
     transforms:
       - key: comment
         value: Omg comments
@@ -10,7 +10,7 @@ rules:
         value: Some:Account
   - include: "./example-extra.yml"
   - matchers:
-      - and_is: Transaction.Description.is("Woolworths")
+      - and_is: Transaction.Description.includes("Woolworths")
     transforms:
       - key: account2
         value: Expenses:Food:Groceries
