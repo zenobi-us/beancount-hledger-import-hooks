@@ -22,5 +22,6 @@ PAYMENT TO MYINVESTMENTLOANACCOUNT 1234-445566
 
 if
 PAYMENT TO MYINVESTMENTLOANACCOUNT
-& %account1 Assets:Bank:MyInvestmentLoan %amount 250
+& %account1 Assets:Bank:MyInvestmentLoan
+& %amount 250
   account2 Liabilities:Bank:MyInvestmentLoan:Fixedrate

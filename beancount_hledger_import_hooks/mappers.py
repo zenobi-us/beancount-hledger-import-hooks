@@ -29,5 +29,9 @@ class TransactionRuleMapper(BaseModel):
     transforms: List[TransformMapper]
 
 
+class DateFormatOptionMapper(BaseModel):
+    value: str = Field(..., alias="date_format")
+
+
 class RuleSetMapper(BaseModel):
-    rules: List[Union[TransactionRuleMapper, IncludeRuleMapper]]
+    rules: List[Union[TransactionRuleMapper, IncludeRuleMapper, DateFormatOptionMapper]]

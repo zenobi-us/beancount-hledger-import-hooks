@@ -2,6 +2,7 @@ from typing import List, Union
 
 from beancount_hledger_import_hooks.interrogator import InterrogatorBase
 from beancount_hledger_import_hooks.mappers import (
+    DateFormatOptionMapper,
     MatcherAndMapper,
     MatcherNotMapper,
     MatcherOrMapper,
@@ -50,22 +51,20 @@ class Rule[T]:
         self,
         matcher: Matcher,
         transforms: List[Transform[T]],
-        interrogator: InterrogatorBase,
     ):
         """
         Create a transformer from a block
         """
         self.matcher = matcher
         self.transforms = transforms
-        self.interrogator = interrogator
 
-    def satisfies(self, transaction: T) -> bool:
+    def satisfies(self, transaction: T, interrogator: InterrogatorBase) -> bool:
         """
         Test if any of the matchers match the transaction
         """
         result = ResolveQuery(
             transaction,
-            self.interrogator,
+            interrogator,
             self.matcher,
         )
 
@@ -81,11 +80,11 @@ class Rule[T]:
 
         return transaction
 
-    def process(self, transaction: T) -> T:
+    def process(self, transaction: T, interrogator: InterrogatorBase) -> T:
         """
         Process the transaction
         """
-        if self.satisfies(transaction):
+        if self.satisfies(transaction, interrogator):
             return self.transform(transaction)
 
         return transaction
@@ -95,7 +94,6 @@ class Rule[T]:
         cls,
         matchers: List[Union[MatcherAndMapper, MatcherOrMapper, MatcherNotMapper]],
         transforms: List[TransformMapper],
-        interrogator: InterrogatorBase,
     ) -> "Rule[F]":  # type: ignore
         mapped_matchers: List[Matcher] = []
         mapped_transforms: List[Transform[F]] = []
@@ -132,43 +130,56 @@ class Rule[T]:
                 *mapped_matchers,
             ),
             transforms=mapped_transforms,
-            interrogator=interrogator,
         )
+
+
+class RuleSetOptions:
+    """
+    Options for a rule set
+    """
+
+    date_format: str = "%d/%m/%Y"
+
+    def __init__(self):
+        pass
 
 
 class RuleSet[T]:
     rules: List[Rule[T]] = []
+    options: RuleSetOptions = RuleSetOptions()
 
-    def __init__(self, rules: List[Rule[T]]):
+    def __init__(self, rules: List[Rule[T]], options: RuleSetOptions | None = None):
         """
         Create a transformer set from a block set
         """
         self.rules = rules
+        self.options = options or RuleSetOptions()
 
-    def run(self, transactions: List[T]) -> List[T]:
+    def run(self, transactions: List[T], interrogator: InterrogatorBase) -> List[T]:
         """
         Run the transformers on the transactions
         """
         for transaction in transactions:
             for rule in self.rules:
-                transaction = rule.process(transaction)
+                transaction = rule.process(transaction, interrogator)
 
         return transactions
 
     @classmethod
-    def from_mapper[F](
-        cls, mapper: RuleSetMapper, interrogator: InterrogatorBase
-    ) -> "RuleSet[F]":  # type: ignore
+    def from_mapper[F](cls, mapper: RuleSetMapper) -> "RuleSet[F]":  # type: ignore
         rules: List[Rule[F]] = []
+        options: RuleSetOptions = RuleSetOptions()
 
         for rule in mapper.rules:
+            if isinstance(rule, DateFormatOptionMapper):
+                options.date_format = rule.value
+
             if isinstance(rule, TransactionRuleMapper):
                 rules.append(
                     Rule.from_mapper(
                         rule.matchers,
                         rule.transforms,
-                        interrogator=interrogator,
                     )
                 )
 
-        return RuleSet[F](rules=rules)
+        return RuleSet[F](rules=rules, options=options)

@@ -6,11 +6,18 @@ from beancount.core import data as beancount_datatypes
 from smart_importer.hooks import ImporterHook
 
 from beancount_hledger_import_hooks.hledger.loader import hledgerblocks
-from beancount_hledger_import_hooks.interrogator import JinjaInterrogator
+from beancount_hledger_import_hooks.interrogator import (
+    InterrogatorBase,
+    JinjaInterrogator,
+)
 from beancount_hledger_import_hooks.rules import RuleSet
 
 
 class WithHledgerRules(ImporterHook):
+    """A hook that applies a series of ledger rules to imported transactions."""
+
+    interrogator: InterrogatorBase
+
     def __init__(self, rules_path: Path | None = None):
         self.rules_path = rules_path
 
@@ -18,8 +25,10 @@ class WithHledgerRules(ImporterHook):
             raise ValueError("rules_path is required")
 
         blocks = hledgerblocks(self.rules_path)
-        interrogator = JinjaInterrogator()
-        self.rules = RuleSet.from_mapper(mapper=blocks, interrogator=interrogator)
+        self.rules = RuleSet.from_mapper(mapper=blocks)
+        self.interrogator = JinjaInterrogator(
+            date_format=self.rules.options.date_format
+        )
         self.lock = threading.Lock()
 
     def __call__(
@@ -41,4 +50,6 @@ class WithHledgerRules(ImporterHook):
         self.account = importer.file_account(file)
 
         with self.lock:
-            return self.rules.run(transactions=imported_entries)
+            return self.rules.run(
+                transactions=imported_entries, interrogator=self.interrogator
+            )

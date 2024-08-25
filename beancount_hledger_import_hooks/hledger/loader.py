@@ -10,6 +10,7 @@ from beancount_hledger_import_hooks.exceptions import (
     UnknownBlockTypeError,
 )
 from beancount_hledger_import_hooks.mappers import (
+    DateFormatOptionMapper,
     IncludeRuleMapper,
     MatcherAndMapper,
     MatcherOrMapper,
@@ -20,7 +21,7 @@ from beancount_hledger_import_hooks.mappers import (
 
 
 def transaction_field_has(field: str, value: str) -> str:
-    return f'"{value.strip()}" in Transaction.{field.strip()}'
+    return f'Transaction.{field.strip()} | matches "{value.strip()}"'
 
 
 class HledgerTransformer(Transformer):
@@ -106,6 +107,11 @@ class HledgerTransformer(Transformer):
     def transform_key(self, value: Token):
         return value[0]
 
+    #
+    # DateFormat option rule
+    def date_format(self, value):
+        return DateFormatOptionMapper(date_format=value[0])
+
 
 hledger_parser = Lark.open(
     "hledger.lark",
@@ -135,13 +141,18 @@ def hledgerblocks(pathname: Path) -> RuleSetMapper:
     """
     Loads hledger rules files
     """
-    new_blocks: List[TransactionRuleMapper | IncludeRuleMapper] = []
+    new_blocks: List[
+        TransactionRuleMapper | DateFormatOptionMapper | IncludeRuleMapper
+    ] = []
 
     ruleset = parse(pathname)
 
     parent = pathname.parent
 
     for rule in ruleset:
+        if isinstance(rule, DateFormatOptionMapper):
+            new_blocks.append(rule)
+
         if isinstance(rule, IncludeRuleMapper):
             # trim any leading or trailing whitespace
             filepath = rule.value
