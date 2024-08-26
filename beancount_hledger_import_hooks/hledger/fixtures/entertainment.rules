@@ -1,0 +1,12 @@
+
+#
+# Entertainment 💃
+#
+
+include ./entertainment.liquior.rules
+include ./entertainment.accomodation.rules
+include ./entertainment.books.rules
+include ./entertainment.coffee.rules
+include ./entertainment.eatingout.rules
+include ./entertainment.gaming.rules
+include ./entertainment.outings.rules

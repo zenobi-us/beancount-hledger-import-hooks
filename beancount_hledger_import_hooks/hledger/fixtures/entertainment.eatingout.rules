@@ -1,0 +1,12 @@
+#
+# Entertainment 🎪🍔
+#
+if
+OTR MAIN ST
+  account2 expenses:self:entertainment:eatingout
+  comment icon:🍫
+
+if
+BOOST JUICE
+  account2 expenses:self:entertainment:eatingout
+  comment icon:🍹

@@ -1,0 +1,10 @@
+
+#
+# Finance 💵
+#
+include ./finance.mortgage.rules
+include ./finance.income.rules
+include ./finance.banking.rules
+include ./finance.tax.rules
+include ./finance.loans.rules
+include ./finance.refunds.rules

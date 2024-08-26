@@ -1,0 +1,10 @@
+#
+#
+#
+
+if
+%date 01/01/1970
+& PAYMENT (.*) to ThatGuy
+  account2 Liabilities:Loans:WithoutInterest
+  comment icon:🪣 , transactionid: $1
+  comment type: R

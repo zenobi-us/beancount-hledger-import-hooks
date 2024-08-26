@@ -1,0 +1,14 @@
+if
+PAYMENT TO MYHOMELOANACCOUNTS 1234-112233
+  account2 Liabilities:Bank:MyHomeLoan:Variable
+  comment mortage payment
+
+if
+PAYMENT TO MYHOMELOANACCOUNTS 1234-223344
+  account2 Liabilities:Bank:MyHomeLoan:Fixedrate
+  comment mortage payment
+
+if
+PAYMENT TO MYINVESTMENTLOANACCOUNT 1234-445566
+  account2 Liabilities:Bank:MyInvestmentLoan:Fixedrate
+  comment mortage payment

@@ -1,0 +1,14 @@
+if
+MYACCOUNTANT NAME
+  account2 expenses:self:tax:accountant
+  comment icon:🧑‍💼
+
+if
+BPAY TAX OFFICE PAYMENT {(.*)}
+  account2 expenses:self:tax:payable
+  comment icon:🧐 , transactionid: $1
+
+if
+TRANSFER FROM ATO (.*)
+  account2 income:self:tax:refunds
+  comment icon:💵 , taxrule:non-taxable
