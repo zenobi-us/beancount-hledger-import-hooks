@@ -4,7 +4,7 @@ import re
 from ast import Dict
 from typing import Any
 
-from jinja2 import Environment
+from jinja2 import Environment, Undefined
 
 
 class InterrogatorBase:
@@ -118,43 +118,81 @@ class JinjaInterrogator(InterrogatorBase):
 
         return x
 
-    def filter_get_dict_keys(self, x: dict):
+    def filter_get_dict_keys(self, x: dict | None):
+        if x is None:
+            return []
         return x.keys()
 
-    def filter_get_dict_values(self, x: dict):
+    def filter_get_dict_values(self, x: dict | None):
+        if x is None:
+            return []
         return [self.date_to_str(value) for value in x.values()]
 
-    def filter_isodate(self, x: datetime.datetime):
-        return x.strftime("%Y-%m-%d")
+    def filter_isodate(self, x: datetime.date | None | str):
+        if x is None:
+            return ""
+        if isinstance(x, datetime.date):
+            return x.strftime("%Y-%m-%d")
+        return x
 
-    def filter_isodatetime(self, x: datetime.datetime):
-        return x.strftime("%Y-%m-%dT%H:%M:%S")
+    def filter_isodatetime(self, x: datetime.datetime | None | str):
+        if x is None:
+            return ""
+        if isinstance(x, datetime.datetime):
+            return x.strftime("%Y-%m-%dT%H:%M:%S")
+        return x
 
-    def filter_isotime(self, x: datetime.datetime):
-        return x.strftime("%H:%M:%S")
+    def filter_isotime(self, x: datetime.datetime | None | str):
+        if x is None:
+            return ""
+        if isinstance(x, datetime.datetime):
+            return x.strftime("%H:%M:%S")
+        return x
 
-    def filter_dateformat(self, x: datetime.datetime, format: str):
-        return x.strftime(format)
+    def filter_dateformat(
+        self, x: datetime.datetime | datetime.date | None | str, format: str
+    ):
+        if x is None:
+            return ""
+        if isinstance(x, datetime.datetime) or isinstance(x, datetime.date):
+            return x.strftime(self.date_format)
+        return x
 
-    def filter_date(self, x: datetime.datetime):
-        return x.strftime(self.date_format)
+    def filter_date(self, x: datetime.datetime | datetime.date | None | str):
+        if x is None:
+            return ""
+        if isinstance(x, datetime.datetime) or isinstance(x, datetime.date):
+            return x.strftime(self.date_format)
+        return x
 
-    def filter_regex_match(self, value: str, pattern: str):
+    def filter_regex_match(self, value: str | None, pattern: str):
+        if value is None or value == "Undefined":
+            return False
         return bool(re.match(pattern, self.date_to_str(value)))
 
-    def filter_regex_search(self, value: str, pattern: str):
+    def filter_regex_search(self, value: str | None, pattern: str):
+        if value is None or value == "Undefined" or isinstance(value, Undefined):
+            return False
         return bool(re.search(pattern, self.date_to_str(value)))
 
-    def filter_glob_match(self, value: str, pattern: str):
+    def filter_glob_match(self, value: str | None, pattern: str):
+        if value is None or value == "Undefined":
+            return False
         return bool(fnmatch.fnmatch(self.date_to_str(value), pattern))
 
-    def test_regex_match(self, value: str, pattern: str):
+    def test_regex_match(self, value: str | None, pattern: str):
+        if value is None or value == "Undefined":
+            return False
         return bool(re.match(pattern, self.date_to_str(value)))
 
-    def test_regex_search(self, value: str, pattern: str):
+    def test_regex_search(self, value: str | None, pattern: str):
+        if value is None or value == "Undefined":
+            return False
         return bool(re.search(pattern, self.date_to_str(value)))
 
-    def test_glob_match(self, value: str, pattern: str):
+    def test_glob_match(self, value: str | None, pattern: str):
+        if value is None or value == "Undefined":
+            return False
         return bool(fnmatch.fnmatch(self.date_to_str(value), pattern))
 
     def __call__(self, source: str, transaction: Any):
@@ -176,6 +214,10 @@ class JinjaInterrogator(InterrogatorBase):
             )
 
         return result
+
+    @classmethod
+    def create_default_expression(cls, field: str, value: str) -> str:
+        return f'Transaction.{field.strip()}|search("{value.strip()}")'
 
 
 class InterrogatorExpressionError(Exception):

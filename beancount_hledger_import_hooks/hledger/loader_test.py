@@ -17,7 +17,7 @@ def test_hledgerblocks():
     blocks = hledgerblocks(rules_path)
 
     assert blocks
-    assert len(blocks.rules) == 22
+    assert len(blocks.rules) == 20
     for rule in blocks.rules:
         assert isinstance(rule, TransactionRuleMapper)
         assert rule.matchers

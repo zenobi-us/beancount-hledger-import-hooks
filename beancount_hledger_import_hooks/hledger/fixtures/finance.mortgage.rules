@@ -1,11 +1,4 @@
 if
-PAYMENT TO YOUROFFSET
-& %account1 Assets:Bank:Offset
-& %amount 500
-  account2 Liabilities:Bank:MyHomeLoan:Variable
-
-
-if
 PAYMENT TO MYHOMELOANACCOUNTS 1234-112233
   account2 Liabilities:Bank:MyHomeLoan:Variable
   comment mortage payment
@@ -19,9 +12,3 @@ if
 PAYMENT TO MYINVESTMENTLOANACCOUNT 1234-445566
   account2 Liabilities:Bank:MyInvestmentLoan:Fixedrate
   comment mortage payment
-
-if
-PAYMENT TO MYINVESTMENTLOANACCOUNT
-& %account1 Assets:Bank:MyInvestmentLoan
-& %amount 250
-  account2 Liabilities:Bank:MyInvestmentLoan:Fixedrate

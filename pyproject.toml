@@ -13,6 +13,7 @@ dependencies = [
     "rich<14.0.0,>=13.7.1",
     "smart-importer==0.5",
     "dedent>=0.5",
+    "pydash>=8.0.3",
 ]
 requires-python = "<4.0,>=3.12"
 readme = "README.md"

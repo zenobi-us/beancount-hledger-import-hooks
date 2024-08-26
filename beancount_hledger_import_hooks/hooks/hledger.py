@@ -49,7 +49,11 @@ class WithHledgerRules(ImporterHook):
         """
         self.account = importer.file_account(file)
 
+        result = []
+
         with self.lock:
-            return self.rules.run(
+            result = self.rules.run(
                 transactions=imported_entries, interrogator=self.interrogator
             )
+
+        return result
